@@ -13,7 +13,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/SoekarnoHatta/go-spamwatch/spamwatch"
+	"github.com/soekarnohatta/go-spamwatch/spamwatch"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -37,7 +37,7 @@ func main() {
 	if bannedUser != nil {
 		fmt.Println("UserID:" + strconv.Itoa(bannedUser.Id))
 		fmt.Println("Reason:" + bannedUser.Reason)
-		fmt.Println("Message" + bannedUser.Message)
+		fmt.Println("Message:" + bannedUser.Message)
 	}
 }
 ```

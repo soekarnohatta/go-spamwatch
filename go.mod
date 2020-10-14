@@ -1,4 +1,4 @@
-module github.com/SoekarnoHatta/go-spamwatch
+module github.com/soekarnohatta/go-spamwatch
 
 go 1.14
 
