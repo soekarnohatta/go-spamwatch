@@ -14,23 +14,16 @@ package main
 import (
 	"fmt"
 	"github.com/soekarnohatta/go-spamwatch/spamwatch"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"strconv"
 )
 
 func main() {
-	// Initialize Log Configuration
-	newZapConfig := zap.NewProductionEncoderConfig()
-	newZap := zap.New(zapcore.NewCore(zapcore.NewConsoleEncoder(newZapConfig), os.Stdout, zap.InfoLevel))
-	newSugarZap := newZap.Sugar()
-
 	// Initialize token
 	token := "PUT YOUR TOKEN HERE"
 
 	// Initialize New Client
-	client, _ := spamwatch.NewClient(newSugarZap, "", token)
+	client, _ := spamwatch.NewClient("", token)
 
 	// Start requesting to the API
 	bannedUser, _ := client.GetBan(123456789)

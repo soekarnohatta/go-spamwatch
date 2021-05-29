@@ -5,8 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -40,16 +39,14 @@ type BaseRequester struct {
 // Requester is an interface that implemements
 // MakeRequest method.
 type Requester interface{
-	MakeRequest(l *zap.SugaredLogger, method string, param string, input interface{}) ([]byte, error)
+	MakeRequest(method string, param string, input interface{}) ([]byte, error)
 }
 
 // MakeRequest creates and reads a new HTTP request
 // from or to the API.
-func (b *BaseRequester) MakeRequest(l *zap.SugaredLogger, method string,
-	param string, input interface{}) ([]byte, error) {
+func (b *BaseRequester) MakeRequest(method string, param string, input interface{}) ([]byte, error) {
 	token := b.token
 	if token == "" {
-		l.Debug("Token invalid")
 		return nil, errors.Errorf("Token Is Invalid")
 	}
 
@@ -59,30 +56,25 @@ func (b *BaseRequester) MakeRequest(l *zap.SugaredLogger, method string,
 		marshalStruct, _ := json.Marshal(input)
 		newBytesBuffer := bytes.NewBuffer(marshalStruct)
 		req, err = http.NewRequest(method, b.apiUrl+"/"+param, newBytesBuffer)
-		l.Debugf(method + " request with body: %+v", input)
 	} else {
 		req, err = http.NewRequest(method, b.apiUrl+"/"+param, nil)
 	}
 
 	if err != nil {
-		l.Debugw("failed to create" + method + "request",
-			zapcore.Field{
-				Key:    "param",
-				Type:   zapcore.StringType,
-				String: param,
-			},
-			zap.Error(err))
 		return nil, errors.Wrapf(err, "client error executing" + method + "request to %v\n", param)
 	}
 	req.Header.Set("Authorization", "Bearer " + token)
 
-	l.Debugf("executing " + method + ": %+v", req)
 	resp, err := b.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	l.Debugf("successful " + method + " request: %+v", resp)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(resp.Body)
 
 	switch resp.StatusCode {
 	case http.StatusBadRequest:
@@ -98,18 +90,5 @@ func (b *BaseRequester) MakeRequest(l *zap.SugaredLogger, method string,
 	}
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	l.Debugw("obtained " +method+ " result",
-		zapcore.Field{
-			Key:    "method",
-			Type:   zapcore.StringType,
-			String: method,
-		},
-		zapcore.Field{
-			Key:    "result",
-			Type:   zapcore.StringType,
-			String: string(bodyBytes),
-		},
-	)
-
 	return bodyBytes, nil
 }

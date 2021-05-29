@@ -56,7 +56,6 @@ type (
 		// Id holds the id of the token
 		Id         int `json:"id"`
 
-
 		Permission `json:"permission"`
 
 		// Token holds the user token
